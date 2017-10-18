@@ -23,6 +23,9 @@ build="$SRC_ROOT/.install/build.sh"
 # Parse command line arguments
 source $SRC_ROOT/.install/parse.sh
 
+$SRC_ROOT/.install/phat.sh --prefix=$SRC_ROOT/src/phat/ || exit 1
+MASS="$MASS -DCMAKE_PHAT_PATH=$SRC_ROOT/src/phat"
+
 # Build "protein2diagram"
 cd ${SRC_ROOT}
 $build --prefix=$PREFIX --searchpath=$SEARCHPATH --build=$BUILDTYPE $MASS || exit 1

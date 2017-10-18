@@ -14,12 +14,6 @@
 #include <phat/representations/vector_vector.h>
 #include <phat/algorithms/twist_reduction.h>
 
-// CGAL includes
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Regular_triangulation_euclidean_traits_3.h>
-#include <CGAL/Regular_triangulation_3.h>
-#include <CGAL/Alpha_shape_3.h>
-#include <CGAL/Object.h>
 
 typedef phat::column Column;
 
@@ -33,8 +27,20 @@ typedef int Index;
 typedef std::vector<Dim> Dim_container;
 typedef std::vector<std::vector<Index> > Matrix;
 
+#if 0
+
+// CGAL includes
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+//#include <CGAL/Regular_triangulation_euclidean_traits_3.h> // deprecated 2017-10-18 -SH
+#include <CGAL/Regular_triangulation_3.h>
+#include <CGAL/Alpha_shape_3.h>
+#include <CGAL/Object.h>
+
+
+// CGAL types
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Ker;
-typedef CGAL::Regular_triangulation_euclidean_traits_3<Ker> Gt_3;
+// typedef CGAL::Regular_triangulation_euclidean_traits_3<Ker> Gt_3; // deprecated 2017-10-18 -SH
+typedef CGAL::Regular_triangulation_traits_3<Ker> Gt_3; // updated 2017-10-18 -SH
 
 typedef CGAL::Alpha_shape_vertex_base_3<Gt_3, CGAL::Default, CGAL::Tag_true, CGAL::Tag_true> Vb_3;
 typedef CGAL::Alpha_shape_cell_base_3<Gt_3, CGAL::Default, CGAL::Tag_true, CGAL::Tag_true> Cb_3;
@@ -49,9 +55,36 @@ typedef Alpha_shape_3::Cell_handle          Cell_handle;
 typedef Alpha_shape_3::Vertex_handle        Vertex_handle;
 typedef Alpha_shape_3::Facet                Facet;
 typedef Alpha_shape_3::Edge                 Edge;
-typedef Gt_3::Weighted_point                Weighted_point;
-typedef Gt_3::Bare_point                    Bare_point;
+// typedef Gt_3::Weighted_point                Weighted_point;  // deprecated 2017-10-18 -SH
+// typedef Gt_3::Bare_point                    Bare_point; // deprecated 2017-10-18 -SH
+typedef Ker::Weighted_point                Weighted_point; // updated 2017-10-18 -SH
+typedef Ker::Bare_point                    Bare_point; // updated 2017-10-18 -SH
+#endif
 
+
+/// <https://doc.cgal.org/latest/Alpha_shapes_3/index.html#Alpha_shapes_3AlphaShape3OrFixedAlphaShape3>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Regular_triangulation_3.h>
+#include <CGAL/Alpha_shape_3.h>
+#include <CGAL/Object.h>
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Regular_triangulation_vertex_base_3<K>        Rvb;
+typedef CGAL::Alpha_shape_vertex_base_3<K,Rvb>              Vb;
+typedef CGAL::Regular_triangulation_cell_base_3<K>          Rcb;
+typedef CGAL::Alpha_shape_cell_base_3<K,Rcb>                Cb;
+typedef CGAL::Triangulation_data_structure_3<Vb,Cb>         Tds;
+typedef CGAL::Regular_triangulation_3<K,Tds>                Triangulation_3;
+typedef CGAL::Alpha_shape_3<Triangulation_3>                Alpha_shape_3;
+typedef Alpha_shape_3::Cell_handle                          Cell_handle;
+typedef Alpha_shape_3::Vertex_handle                        Vertex_handle;
+typedef Alpha_shape_3::Facet                                Facet;
+typedef Alpha_shape_3::Edge                                 Edge;
+typedef Triangulation_3::Weighted_point                     Weighted_point;
+typedef Triangulation_3::Bare_point                         Bare_point;
+///
+
+typedef Triangulation_3::Cell_circulator          Cell_circulator;
 typedef Triangulation_3::Finite_cells_iterator    Finite_cells_iterator;
 typedef Triangulation_3::Finite_facets_iterator   Finite_facets_iterator;
 typedef Triangulation_3::Finite_edges_iterator    Finite_edges_iterator;
@@ -194,6 +227,9 @@ int main(int argc, char** argv)
   std::list<Weighted_point> lp;
     
   // Read input data
+  // and create a list `lp` of `Weighted_point`s, representing atomic centers
+  // with a weight giving atomic radius
+
   std::ifstream is(fname);
   std::string next_line;
 
@@ -207,16 +243,22 @@ int main(int argc, char** argv)
     }
   }
 
-  std::cerr << "Point cloud size: " << lp . size() << std::endl;
+  //std::cerr << "Point cloud size: " << lp . size() << std::endl;
 
-  std::cerr << "Computing Alpha shape..." << std::endl;
+  //std::cerr << "Computing Alpha shape..." << std::endl;
   Alpha_shape_3 shape(lp.begin(),lp.end(), 0, Alpha_shape_3::GENERAL);
 
-  std::cerr << "Computing births..." << std::endl;
+  //std::cerr << "Computing births..." << std::endl;
 
   typedef CGAL::Triple<FT,int,CGAL::Object> Triple;
   std::vector<Triple> circumradii;
   FT alpha_value;
+
+  //
+  // Obtain circumradii for each cell in alpha complex
+  //
+
+  // Obtain circumradii of 0-cells
 
   for (Finite_vertices_iterator vertex = shape.finite_vertices_begin();
        vertex != shape.finite_vertices_end(); vertex++) {
@@ -226,13 +268,17 @@ int main(int argc, char** argv)
 
     if(as->is_Gabriel()){
       alpha_value = as->alpha_min();
+      //std::cout << "dim 0. gabriel. " << alpha_value << "\n";
     }
     else {
       alpha_value = as->alpha_mid();
+      //std::cout << "dim 0. not gabriel. " << alpha_value << "\n";
     }
 
     circumradii.push_back(CGAL::make_triple (alpha_value, 0, CGAL::make_object(vh)));
   }
+
+  // Obtain circumradii of 1-cells
 
   for (Finite_edges_iterator edge = shape.finite_edges_begin();
        edge != shape.finite_edges_end(); edge++) {
@@ -245,13 +291,17 @@ int main(int argc, char** argv)
 
     if(as->is_Gabriel()){
       alpha_value = as->alpha_min();
+      //std::cout << "dim 1. gabriel. " << alpha_value << "\n";
     }
     else {
       alpha_value = as->alpha_mid();
+      //std::cout << "dim 1. not gabriel. " << alpha_value << "\n";
     }
 
     circumradii.push_back(CGAL::make_triple (alpha_value, 1, CGAL::make_object(*edge)));
   }
+
+  // Obtain circumradii of 2-cells
 
   for (Finite_facets_iterator f = shape.finite_facets_begin();
        f != shape.finite_facets_end(); f++) {
@@ -263,13 +313,16 @@ int main(int argc, char** argv)
 
     if(as->is_Gabriel()){
       alpha_value = as->alpha_min();
+      //std::cout << "dim 2. gabriel. " << alpha_value << "\n";
     }
     else {
       alpha_value = as->alpha_mid();
+      //std::cout << "dim 2. not gabriel. " << alpha_value << "\n";
     }
-
     circumradii.push_back(CGAL::make_triple (alpha_value, 2, CGAL::make_object(*f)));
   }
+
+  // Obtain circumradii of 3-cells
 
   for (Finite_cells_iterator cit = shape.finite_cells_begin();
        cit != shape.finite_cells_end(); cit++) {
@@ -279,14 +332,18 @@ int main(int argc, char** argv)
     Vertex_handle v3 = cit->vertex(2);
     Vertex_handle v4 = cit->vertex(3);
 
+    //std::cout << "dim 3. gabriel. " << cit->get_alpha() << "\n";
+
     circumradii.push_back(CGAL::make_triple (cit->get_alpha(), 3, CGAL::make_object(ch)));
   }
 
-  std::cerr << "Sorting alpha_values..." << std::endl;
+  // Create filtration by sorting circumradii of each cell
+
+  //std::cerr << "Sorting alpha_values..." << std::endl;
 
   std::sort(circumradii.begin(),circumradii.end(), Sort_triples<Triple>());
 
-  std::cerr << "Filtration of size " << circumradii.size() << std::endl;
+  //std::cerr << "Filtration of size " << circumradii.size() << std::endl;
 
   Vertex_handle v;
   Edge e;
@@ -308,16 +365,17 @@ int main(int argc, char** argv)
 
   for(std::vector<Triple>::const_iterator it = circumradii.begin();
       it != circumradii.end(); it++) {
-    if(filtration_index % 5000 == 0) {
-      std::cerr << filtration_index << " of " << filtration_size << std::endl;
-    }
+    // if(filtration_index % 5000 == 0) {
+    //   std::cerr << filtration_index << " of " << filtration_size << std::endl;
+    // }
 
     filtration_index++;
 
     const CGAL::Object& obj = it->third;
     Column col;
 
-    alpha_map[curr_index] = std::make_pair (it->second, it->first.exact().to_double() );
+    // alpha_map[curr_index] = std::make_pair (it->second, it->first.exact().to_double() ); // 2017-10-18 -SH
+    alpha_map[curr_index] = std::make_pair (it->second, it->first );  // 2017-10-18 -SH
 
     if(CGAL::assign(v,obj)) {
       // std::cout << "Vertex " << it->second << std::endl;
@@ -390,7 +448,7 @@ int main(int argc, char** argv)
   phat::compute_persistence_pairs< phat::twist_reduction > (pairs, boundary_matrix);
   pairs.sort();
 
-  std::cerr << "Pairs computed!" << std::endl;
+  //std::cerr << "Pairs computed!" << std::endl;
 
   std::vector<std::ofstream> o_files(3);
 
@@ -409,7 +467,9 @@ int main(int argc, char** argv)
     FT death = circumradii[d_i].first;
 
     if (birth != death){
-      o_files[cur_dim] << birth.exact().to_double() << " " << death.exact().to_double() << "\n";
+      //o_files[cur_dim] << birth.exact().to_double() << " " << death.exact().to_double() << "\n"; // 2017-10-18 -SH
+      o_files[cur_dim] << birth << " " << death << "\n"; // 2017-10-18 -SH
+
     }
   }
 

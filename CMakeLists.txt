@@ -49,10 +49,13 @@ include(${VTK_USE_FILE})
 # Include Directories #
 #######################
 
+message(${CMAKE_PHAT_PATH}/include)
+
 include_directories ( 
   ${CMAKE_SOURCE_DIR}/include
   /usr/local/include 
   ${Boost_INCLUDE_DIRS} 
+  ${CMAKE_PHAT_PATH}/include
   ${USER_INCLUDE_PATH} )
 
 #######################
