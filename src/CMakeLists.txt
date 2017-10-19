@@ -1,14 +1,12 @@
 # add the executable
 
 set ( LIBS      ${LIBS}
-                ${Boost_LIBRARIES}
-                ${VTK_LIBRARIES}
-                sqlite3 )
+                ${VTK_LIBRARIES} )
 
-add_executable ( protein2diagram pers_weighted_alpha_3d.cpp )
-target_link_libraries ( protein2diagram ${LIBS} )
+add_executable ( pers_weighted_alpha_3d pers_weighted_alpha_3d.cpp )
+target_link_libraries ( pers_weighted_alpha_3d ${LIBS} )
 
-install(TARGETS protein2diagram
+install(TARGETS pers_weighted_alpha_3d
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
