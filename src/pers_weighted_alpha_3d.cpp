@@ -1,6 +1,7 @@
 /// pers_weighted_alpha_3d.cpp
-/// Author: Marcio Gameiro
+/// Author: Emerson Escolar, Marcio Gameiro
 /// 2017 MIT LICENSE
+/// * Updated to compile with latest CGAL by Shaun Harker 2017-10-18
 
 #include <fstream>
 #include <cassert>
