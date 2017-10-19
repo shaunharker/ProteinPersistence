@@ -35,7 +35,7 @@ def PerformJobsWithMultiprocessing(manifest_filename, path, savepath):
     with open(manifest_filename) as f:
         manifest = f.readlines()
     pool = mp.Pool(processes=20)
-    pool.map(ProcessFile, [ [filename, path, savepath] for filename in manifest])
+    pool.map(ProcessFile, [ [filename.rstrip(), path, savepath] for filename in manifest])
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
