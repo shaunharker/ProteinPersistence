@@ -38,4 +38,5 @@ def PerformJobsWithMultiprocessing(manifest_filename, path, savepath):
 if __name__ == '__main__':
     if len(sys.argv) != 4:
         print("Usage: Compute_PDB_Diagrams.py <manifest_file> <path_of_pdb_files> <path_to_save_output>")
+        exit(1)
     PerformJobsWithMultiprocessing(sys.argv[1], sys.argv[2], sys.argv[3])
