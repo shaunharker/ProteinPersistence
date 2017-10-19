@@ -6,7 +6,7 @@ This repository holds code used for experiments based on persistence homology on
 
 Thanks go to:
 
-* Marcio Gameiro for contributing code developed with Emerson Escolar which interfaces with uCGAL and PHAT to do weighted alpha complex persistence: `src/pers_weighted_alpha_3d.cpp` Marcio Gameiro)
+* Marcio Gameiro for contributing code developed with Emerson Escolar which interfaces with uCGAL and PHAT to do weighted alpha complex persistence.
 
 ## References
 
