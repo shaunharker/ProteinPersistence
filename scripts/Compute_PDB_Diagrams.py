@@ -25,15 +25,16 @@ def Compute_PDB_PersistenceDiagrams(filename):
     # Compute 
     return ProteinPersistence.pdb2persistence(xyzr_list)
 
+def ProcessFile(filename, path, savepath):
+    diagrams = Compute_PDB_PersistenceDiagrams( path + '/' + filename)
+    with open(savepath + '/' + filename + '_persistence.json', 'w') as outfile:
+        json.dump(diagrams, outfile)   
+
 def PerformJobsWithMultiprocessing(manifest_filename, path, savepath):
     with open(manifest_filename) as f:
         manifest = f.readlines()
     pool = mp.Pool(processes=20)
-    def ProcessFile(filename):
-        diagrams = Compute_PDB_PersistenceDiagrams( path + '/' + filename)
-        with open(savepath + '/' + filename + '_persistence.json', 'w') as outfile:
-            json.dump(diagrams, outfile)    
-    pool.map(ProcessFile, manifest)
+    pool.starmap(ProcessFile, zip(manifest, repeat(path), repeat(savepath)))
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
